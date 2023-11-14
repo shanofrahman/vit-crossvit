@@ -27,7 +27,7 @@ To use CrossViT for image classification, you can instantiate the `CrossViT` cla
 Clone the repository and use the provided classes in your PyTorch projects. Adjust the model parameters according to your specific task and dataset.
 
 ```bash
-git clone https://github.com/yourusername/vision-transformer.git
+git clone https://github.com/shanofrahman/vit-crossvit.git
 cd vision-transformer
 ```
 
