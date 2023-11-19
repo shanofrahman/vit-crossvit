@@ -61,12 +61,6 @@ class Attention(nn.Module):
         self.output = nn.Sequential(nn.Linear(heads*dim_head, dim), nn.Dropout(dropout))
         
     def forward(self, x, context = None, kv_include_self = False):                      # (16, 17, 64)
-        # now compute the attention/cross-attention
-        # in cross attention: x = class token, context = token embeddings
-        # don't forget the dropout after the attention 
-        # and before the multiplication w. 'v'
-        # the output should be in the shape 'b n (h d)'
-        
         b, n, _, h = *x.shape, self.heads
         if context is None:
             context = x
@@ -89,16 +83,6 @@ class Attention(nn.Module):
         q = rearrange(q, 'b n (h d) -> b h n d', h = h)                                 # (16, 8, 17, 64)
         k = rearrange(k, 'b n (h d) -> b h n d', h = h)                                 # (16, 8, 17, 64)
         v = rearrange(v, 'b n (h d) -> b h n d', h = h)                                 # (16, 8, 17, 64)
-
-        # batch_outputs = []
-        # for b in range(q.size()[0]):
-        #     patch_outputs = []
-        #     for p in range(q.size()[1]):
-        #         q_kt = torch.matmul(q[b][p], torch.transpose(k[b][p], 1, 0))
-        #         patch_outputs.append(q_kt)
-        #     batch_outputs.append(torch.stack((patch_outputs)))
-        
-        # q_k = torch.stack((batch_outputs)) *(1 / self.scale) 
         
         q_k = einsum('b h i d, b h j d -> b h i j', q, k) * self.scale            # (16, 8, 17, 17)
         
@@ -109,14 +93,6 @@ class Attention(nn.Module):
         attn = self.dropout(attn)
         
         # print("attn ", attn.size(), "v",  v.size())
-        
-        # batch_outputs = []
-        # for b in range(attn.size()[0]):
-        #     patch_outputs = []
-        #     for p in range(attn.size()[1]):
-        #         attn_v = torch.matmul(attn[b][p], v[b][p])
-        #         patch_outputs.append(attn_v)
-        #     batch_outputs.append(torch.stack((patch_outputs)))
         
         # out = torch.stack((batch_outputs))
         out = einsum('b p n h, b p h t -> b p n t', attn, v)                            # (16, 8, 17, 64)
